@@ -1,0 +1,6 @@
+npx expo install expo-av - allows us to have medid (video,sound,image...)
+npx expo install firebase - firebase...
+npx expo install expo-dev-client - required for the community blur
+npx expo install react-native-svg - for svg files
+npx expo install expo-image-picker - to open images
+npm install @react-native-community/blur - blur background
