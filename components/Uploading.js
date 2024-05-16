@@ -11,6 +11,7 @@ import React from "react";
 import ProgressBar from "./ProgressBar";
 import { Video } from "expo-av";
 
+// Define the Uploading component
 const Uploading = ({ image, video, progress }) => {
   return (
     <View
@@ -19,6 +20,7 @@ const Uploading = ({ image, video, progress }) => {
     >
       <View style={StyleSheet.absoluteFill}></View>
       <View className="w-3/4  bg-blue-100 items-center justify-center px-2 rounded-xl">
+        {/* Display the image if available */}
         {image && (
           <Image
             source={{ uri: image }}
@@ -30,6 +32,7 @@ const Uploading = ({ image, video, progress }) => {
             }}
           />
         )}
+        {/* Display the video if available */}
         {video && (
           <Video
             source={{ uri: video }}

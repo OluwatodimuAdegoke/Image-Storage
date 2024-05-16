@@ -11,6 +11,10 @@ import { db, storage } from "../firebaseConfig";
 import { set } from "firebase/database";
 import { Video } from "expo-av";
 
+/**
+ * Home screen component.
+ * Displays a list of uploaded images and videos.
+ */
 const Home = () => {
   const [image, setImage] = useState("");
   const [video, setVideo] = useState("");
@@ -18,6 +22,7 @@ const Home = () => {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
+    // Subscribe to changes in the "files" collection
     const unsubscribe = onSnapshot(collection(db, "files"), (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
@@ -30,6 +35,9 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
+  /**
+   * Pick an image from the device's image library.
+   */
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -41,12 +49,16 @@ const Home = () => {
     if (!result.canceled) {
       setImage(result.assets[0].uri);
 
-      // upload the image
-      // storage
+      // Upload the image
       await uploadImage(result.assets[0].uri, "image");
     }
   };
 
+  /**
+   * Upload an image to the Firebase storage.
+   * @param {string} uri - The URI of the image file.
+   * @param {string} fileType - The type of the file (e.g., "image" or "video").
+   */
   const uploadImage = async (uri, fileType) => {
     const response = await fetch(uri);
     const blob = await response.blob();
@@ -54,8 +66,7 @@ const Home = () => {
     const storageRef = ref(storage, "Media/" + new Date().getTime());
     const uploadTask = uploadBytesResumable(storageRef, blob);
 
-    // listen for events
-
+    // Listen for upload progress events
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -68,11 +79,10 @@ const Home = () => {
         // Handle unsuccessful uploads
       },
       () => {
+        // Get the download URL of the uploaded file
         getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
           console.log("File available at", downloadURL);
-          // save record
-
-          // firestore
+          // Save the record in the Firestore database
           await saveRecord(fileType, downloadURL, new Date().toISOString());
           setImage("");
           setVideo("");
@@ -81,6 +91,12 @@ const Home = () => {
     );
   };
 
+  /**
+   * Save a record in the Firestore database.
+   * @param {string} fileType - The type of the file (e.g., "image" or "video").
+   * @param {string} url - The download URL of the file.
+   * @param {string} createdAt - The timestamp when the file was created.
+   */
   const saveRecord = async (fileType, url, createdAt) => {
     try {
       const docRef = await addDoc(collection(db, "files"), {
@@ -88,12 +104,15 @@ const Home = () => {
         url,
         createdAt,
       });
-      console.log("Document saaved correctly", docRef.id);
+      console.log("Document saved correctly", docRef.id);
     } catch (error) {
       console.log(error);
     }
   };
 
+  /**
+   * Pick a video from the device's video library.
+   */
   const pickVideo = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
@@ -105,7 +124,7 @@ const Home = () => {
 
     if (!result.canceled) {
       setVideo(result.assets[0].uri);
-      // upload the video
+      // Upload the video
       uploadImage(result.assets[0].uri, "video");
     }
   };
@@ -113,6 +132,7 @@ const Home = () => {
   return (
     <View style={{ flex: 1, padding: 20 }}>
       <View>
+        {!images && !videos && <EmptyState />}
         <FlatList
           data={files}
           keyExtractor={(item) => item.url}
